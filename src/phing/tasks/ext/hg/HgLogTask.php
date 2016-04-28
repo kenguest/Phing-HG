@@ -1,20 +1,78 @@
 <?php
+/**
+ * Utilise Mercurial from within Phing.
+ *
+ * PHP Version 5.4
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     https://github.com/kenguest/Phing-HG
+ */
+
+/**
+ * Pull in Base class.
+ */
 require_once 'HgBaseTask.php';
+
+/**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
 use Siad007\VersionControl\HG\Factory;
+
+/**
+ * Integration/Wrapper for hg log
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext.hg
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     HgLogTask.php
+ */
 class HgLogTask extends HgBaseTask
 {
+    /**
+     * Current working directory
+     *
+     * @var string
+     */
     protected $cwd = null;
 
+    /**
+     * Maximum number of changes to get. See --limit
+     *
+     * @var int
+     */
     protected $maxCount = null;
 
+    /**
+     * Commit format/template. See --template
+     *
+     * @var string
+     */
     protected $format = null;
 
-    protected $rev = '';
-
-    protected $repository = '';
+    /**
+     * Revision
+     *
+     * @var string
+     */
+    protected $revision = '';
 
     /**
-     * @param $count
+     * Propery name to set the output to.
+     *
+     * @var string
+     */
+    protected $outputProperty = null;
+
+    /**
+     * Set maximum number of changes to get.
+     *
+     * @param int $count Maximum number of log entries to retrieve.
+     *
+     * @return void
      */
     public function setMaxcount($count)
     {
@@ -22,6 +80,8 @@ class HgLogTask extends HgBaseTask
     }
 
     /**
+     * Retrieve max count of commits to limit to.
+     *
      * @return int
      */
     public function getMaxcount()
@@ -30,7 +90,11 @@ class HgLogTask extends HgBaseTask
     }
 
     /**
-     * @param $format
+     * Template/log format.
+     *
+     * @param string $format Log format
+     *
+     * @return string
      */
     public function setFormat($format)
     {
@@ -38,6 +102,8 @@ class HgLogTask extends HgBaseTask
     }
 
     /**
+     * Get the log format/template
+     *
      * @return string
      */
     public function getFormat()
@@ -46,38 +112,49 @@ class HgLogTask extends HgBaseTask
     }
 
     /**
-     * @param $prop
+     * Property to assign output to.
+     *
+     * @param string $property name of property to assign output to.
+     *
+     * @return void
      */
-    public function setOutputProperty($prop)
+    public function setOutputProperty($property)
     {
-        $this->outputProperty = $prop;
+        $this->outputProperty = $property;
     }
 
+    /**
+     * Set current working directory.
+     *
+     * @param string $cwd current working directory
+     *
+     * @return void
+     */
     public function setCwd($cwd)
     {
         $this->cwd = $cwd;
     }
 
-    public function setRepository($repository)
+    /**
+     * Set revision attribute
+     *
+     * @param string $revision Revision
+     *
+     * @return void
+     */
+    public function setRevision($revision)
     {
-        $this->repository = $repository;
+        $this->revision = $revision;
     }
 
-    public function setRev($revision)
-    {
-        $this->rev = $revision;
-    }
-
+    /**
+     * Main entry point for this task
+     *
+     * @return void
+     */
     public function main()
     {
         $clone = Factory::getInstance('log');
-        // Is target path empty?
-        if (file_exists($target)) {
-            $files = scandir($target);
-            if (is_array($files) && count($files) > 2) {
-                throw new BuildException("Directory \"$target\" is not empty");
-            }
-        }
 
         if ($this->repository === '') {
             $clone->setCwd($this->cwd);
@@ -85,24 +162,24 @@ class HgLogTask extends HgBaseTask
             $clone->setCwd($this->repository);
         }
 
-        if (!is_null($this->maxCount)) {
-            $clone->setLimit("" . $this->maxCount);
+        if ($this->maxCount !== null) {
+            $clone->setLimit('' . $this->maxCount);
         }
 
-        if (!is_null($this->format)) {
+        if ($this->format !== null) {
             $clone->setTemplate($this->format);
         }
 
-        if ($this->rev !== '') {
-            $clone->setRev($this->rev);
+        if ($this->revision !== '') {
+            $clone->setRev($this->revision);
         }
 
         try {
             $output = $clone->execute();
-            if (!is_null($this->outputProperty)) {
+            if ($this->outputProperty !== null) {
                 $this->project->setProperty($this->outputProperty, $output);
             } else {
-                if ($output != '') {
+                if ($output !== '') {
                     $this->log(PHP_EOL . $output);
                 }
             }

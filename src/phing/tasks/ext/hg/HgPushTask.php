@@ -1,21 +1,43 @@
 <?php
+/**
+ * Utilise Mercurial from within Phing.
+ *
+ * PHP Version 5.4
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     https://github.com/kenguest/Phing-HG
+ */
+
+/**
+ * Pull in Base class.
+ */
 require_once 'HgBaseTask.php';
+
+/**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
 use Siad007\VersionControl\HG\Factory;
 
+/**
+ * Integration/Wrapper for hg push
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext.hg
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     HgPushTask.php
+ */
 class HgPushTask extends HgBaseTask
 {
+    /**
+     * Whether the task should halt if an error occurs.
+     *
+     * @var bool
+     */
     protected $haltonerror = false;
-
-    public function setInsecure($insecure)
-    {
-        $this->insecure = $insecure;
-    }
-
-
-    public function getInsecure()
-    {
-        return $this->insecure;
-    }
 
     /**
      * Set haltonerror attribute.
@@ -27,26 +49,31 @@ class HgPushTask extends HgBaseTask
     public function setHaltonerror($halt)
     {
         $doHalt = false;
-        if (strtolower($halt) == 'yes' || $halt == 1) {
+        if ((int) $halt === 1 || strtolower($halt) === 'yes') {
             $doHalt = true;
         }
         $this->haltonerror = $doHalt;
     }
 
+    /**
+     * The main entry point method.
+     *
+     * @throws BuildException
+     * @return void
+     */
     public function main()
     {
         $clone = Factory::getInstance('push');
-        $msg = sprintf("Pushing...");
-        $this->log($msg, Project::MSG_INFO);
+        $this->log('Pushing...', Project::MSG_INFO);
         $clone->setInsecure($this->getInsecure());
         $clone->setQuiet($this->getQuiet());
-        $prog = $this->getProject();
-        $dir = $prog->getProperty('application.startdir');
+        $project = $this->getProject();
+        $dir = $project->getProperty('application.startdir');
         $cwd = getcwd();
         chdir($dir);
         try {
             $output = $clone->execute();
-            if ($output != '') {
+            if ($output !== '') {
                 $this->log($output);
             }
         } catch(Exception $ex) {
@@ -64,4 +91,3 @@ class HgPushTask extends HgBaseTask
         chdir($cwd);
     }
 }
-

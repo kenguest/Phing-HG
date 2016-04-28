@@ -1,31 +1,54 @@
 <?php
+/**
+ * Utilise Mercurial from within Phing.
+ *
+ * PHP Version 5.4
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     https://github.com/kenguest/Phing-HG
+ */
+
+/**
+ * Pull in Base class.
+ */
 require_once 'HgBaseTask.php';
+
+/**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
 use Siad007\VersionControl\HG\Factory;
 
+/**
+ * Integration/Wrapper for hg add
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext.hg
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     HgAddTask.php
+ */
 class HgAddTask extends HgBaseTask
 {
     /**
-     * message
+     * Linked filesets
      *
      * @var string
      */
     protected $filesets = [];
+    /**
+     * Array of files to ignore
+     *
+     * @var mixed
+     */
     protected $ignoreFile = [];
-
-    public function setInsecure($insecure)
-    {
-        $this->insecure = $insecure;
-    }
-
-    public function getInsecure()
-    {
-        return $this->insecure;
-    }
 
     /**
      * Adds a fileset of files to add to the repository.
      *
-     * @param FileSet $fs Set of files to add to the repository.
+     * @param FileSet $fileset Set of files to add to the repository.
      *
      * @return void
      */
@@ -34,115 +57,150 @@ class HgAddTask extends HgBaseTask
         $this->filesets[] = $fileset;
     }
 
+    /**
+     * The main entry point method.
+     *
+     * @throws BuildException
+     * @return void
+     */
     public function main()
     {
+        $filesAdded = false;
         $clone = Factory::getInstance('add');
-        //$clone->setInsecure($this->getInsecure());
         $clone->setQuiet($this->getQuiet());
 
-        $project = $this->getProject();
-        $dir = $project->getProperty('application.startdir');
         $cwd = getcwd();
-        //chdir($dir);
+        $project = $this->getProject();
+        if ($this->repository === '') {
+            $dir = $project->getProperty('application.startdir');
+        } else {
+            $dir = $this->repository;
+        }
+        chdir($dir);
 
-        if (file_exists(".hgignore")) {
+        if (file_exists('.hgignore')) {
             $this->loadIgnoreFile();
         }
         if (count($this->filesets)) {
-            $this->log("filesets set", Project::MSG_INFO);
+            $this->log('filesets set', Project::MSG_DEBUG);
+            /**
+             * $fs is a FileSet
+             *
+             * @var $fs FileSet
+             */
             foreach ($this->filesets as $fs) {
                 $ds = $fs->getDirectoryScanner($project);
                 $fromDir = $fs->getDir($project);
-                $srcDirs = $ds->getIncludedDirectories();
-                $srcFiles = $ds->getIncludedFiles();
-                foreach ($srcFiles as $file) {
-                    $relPath = $fromDir . DIRECTORY_SEPARATOR . $file;
-                    $msg .= $relPath . "\n";
-                    if (strpos($relPath, "./.hg") === false) {
-                        if (!$this->fileIsIgnored($relPath)) {
-                            $clone->addFile($relPath);
-                            //var_dump ("$relPath is added.");
-                        } else {
-                            //var_dump ("$relPath is ignored.");
+                if ($fromDir->getName() === '.') {
+                    $statusClone = Factory::getInstance('status');
+                    $statusClone->setUnknown(true);
+                    $statusClone->setNoStatus(true);
+                    $statusClone->setRepository($this->getRepository());
+                    $statusOut = $statusClone->execute();
+                    if ($statusOut !== '') {
+                        $files = explode(PHP_EOL, $statusOut);
+                        foreach ($files as $file) {
+                            if ($file != '') {
+                                $clone->addFile($file);
+                                $filesAdded = true;
+                            }
                         }
                     }
                 }
             }
         }
 
-        // No files added...
-        /*
-        if (empty($clone->getFile())) {
-            var_dump ("No files added.");
-            return;
-        }
-        */
-
-        try {
-            $this->log("Adding: command: $clone", Project::MSG_INFO);
-            $output = $clone->execute();
-            if ($output != '') {
-                $this->log($output);
+        if ($filesAdded) {
+            try {
+                $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
+                $output = $clone->execute();
+                if ($output !== '') {
+                    $this->log($output);
+                }
+            } catch(Exception $ex) {
+                $msg = $ex->getMessage();
+                $this->log("Exception: $msg", Project::MSG_INFO);
+                $p = strpos($msg, 'hg returned:');
+                if ($p !== false) {
+                    $msg = substr($msg, $p + 13);
+                }
+                chdir($cwd);
+                throw new BuildException($msg);
             }
-        } catch(Exception $ex) {
-            $msg = $ex->getMessage();
-            $this->log("Exception: $msg", Project::MSG_INFO);
-            $p = strpos($msg, 'hg returned:');
-            if ($p !== false) {
-                $msg = substr($msg, $p + 13);
-            }
-            var_dump ($ex);
-            throw new BuildException($msg);
         }
+        chdir($cwd);
     }
 
+    /**
+     * Load .hgignore file.
+     *
+     * @return void
+     */
     public function loadIgnoreFile()
     {
         $ignores = [];
-        $lines = file(".hgignore");
-        foreach($lines as $line) {
+        $lines = file('.hgignore');
+        foreach ($lines as $line) {
             $nline =  trim($line);
-            $nline = preg_replace('/\/\*$/','/', $nline);
+            $nline = preg_replace('/\/\*$/', '/', $nline);
             $ignores[] = $nline;
         }
         $this->ignoreFile = $ignores;
     }
 
+    /**
+     * Determine if a file is to be ignored.
+     *
+     * @param string $file filename
+     *
+     * @return bool
+     */
     public function fileIsIgnored($file)
     {
         $line = $this->ignoreFile[0];
         $mode = 'regexp';
-        if (preg_match('#^syntax\s*:\s*(glob|regexp)$#', $line, $matches)) {
-            if ($matches[1] == 'glob') {
-                $mode = 'glob';
-            }
+        $ignored = false;
+        if (preg_match('#^syntax\s*:\s*(glob|regexp)$#', $line, $matches)
+            || $matches[1] === 'glob'
+        ) {
+            $mode = 'glob';
         }
-        if ($mode == 'glob') {
+        if ($mode === 'glob') {
             $ignored = $this->ignoredByGlob($file);
-        } elseif ($mode == 'regexp') {
+        } elseif ($mode === 'regexp') {
             $ignored = $this->ignoredByRegex($file);
         }
         return $ignored;
     }
 
+    /**
+     * Determine if file is ignored by glob pattern.
+     *
+     * @param string $file filename
+     *
+     * @return bool
+     */
     public function ignoredByGlob($file)
     {
         $lfile = $file;
-        if (strpos($lfile, "./") === 0) {
+        if (strpos($lfile, './') === 0) {
             $lfile = substr($lfile, 2);
         }
-        foreach($this->ignoreFile as $line) {
+        foreach ($this->ignoreFile as $line) {
             if (strpos($lfile, $line) === 0) {
                 return true;
             }
-            /*
-            var_dump ("line: $line");
-            var_dump ("file: $lfile");
-            */
         }
         return false;
     }
 
+    /**
+     * Is file ignored by regex?
+     *
+     * @param string $file Filename
+     *
+     * @return bool
+     */
     public function ignoredByRegex($file)
     {
         return true;

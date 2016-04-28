@@ -1,21 +1,49 @@
 <?php
+/**
+ * Utilise Mercurial from within Phing.
+ *
+ * PHP Version 5.4
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     https://github.com/kenguest/Phing-HG
+ */
+
+/**
+ * Pull in Base class.
+ */
 require_once 'HgBaseTask.php';
+
+/**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
 use Siad007\VersionControl\HG\Factory;
 
+/**
+ * Integration/Wrapper for hg update
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext.hg
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     HgPullTask.php
+ */
 class HgPullTask extends HgBaseTask
 {
     /**
      * Path to target directory
+     *
      * @var string
      */
-    private $targetPath;
-
-    private $repository = "";
+    protected $targetPath;
 
     /**
      * Set path to source repo
      *
-     * @param  string $targetPath Path to repository used as source
+     * @param string $targetPath Path to repository used as source
+     *
      * @return void
      */
     public function setTargetPath($targetPath)
@@ -23,23 +51,12 @@ class HgPullTask extends HgBaseTask
         $this->targetPath = $targetPath;
     }
 
-    public function setRepository($repository)
-    {
-        $this->repository = $repository;
-    }
-
-    public function setInsecure($insecure)
-    {
-        $this->insecure = $insecure;
-    }
-
-
-    public function getInsecure()
-    {
-        return $this->insecure;
-    }
-
-
+    /**
+     * The main entry point method.
+     *
+     * @throws BuildException
+     * @return void
+     */
     public function main()
     {
         $clone = Factory::getInstance('pull');
@@ -49,8 +66,8 @@ class HgPullTask extends HgBaseTask
         $cwd = getcwd();
 
         if ($this->repository === '') {
-            $prog = $this->getProject();
-            $dir = $prog->getProperty('application.startdir');
+            $project = $this->getProject();
+            $dir = $project->getProperty('application.startdir');
         } else {
             $dir = $this->repository;
         }
@@ -58,7 +75,7 @@ class HgPullTask extends HgBaseTask
 
         try {
             $output = $clone->execute();
-            if ($output != '') {
+            if ($output !== '') {
                 $this->log($output);
             }
         } catch(Exception $ex) {

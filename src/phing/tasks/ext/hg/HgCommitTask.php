@@ -1,67 +1,86 @@
 <?php
+/**
+ * Utilise Mercurial from within Phing.
+ *
+ * PHP Version 5.4
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     https://github.com/kenguest/Phing-HG
+ */
+
+/**
+ * Pull in Base class.
+ */
 require_once 'HgBaseTask.php';
+
+/**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
 use Siad007\VersionControl\HG\Factory;
 
+/**
+ * Integration/Wrapper for hg commit
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext.hg
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     HgCommitTask.php
+ */
 class HgCommitTask extends HgBaseTask
 {
     /**
-     * message
+     * Message to be recorded against commit.
      *
      * @var string
      */
-    protected $message = null;
-    protected $user = null;
-    protected $repository = '';
+    protected $message = '';
 
+    /**
+     * Set message to be used.
+     *
+     * @param string $message Message to use
+     *
+     * @return void
+     */
     public function setMessage($message)
     {
         $this->message = $message;
     }
 
+    /**
+     * Get message to apply for the commit.
+     *
+     * @return string
+     */
     public function getMessage()
     {
         return $this->message;
     }
 
-    public function setUser($user)
-    {
-        $this->user = $user;
-    }
-
-    public function getUser()
-    {
-        return $this->user;
-    }
-
-    public function setInsecure($insecure)
-    {
-        $this->insecure = $insecure;
-    }
-
-    public function getInsecure()
-    {
-        return $this->insecure;
-    }
-
-    public function setRepository($repository)
-    {
-        $this->repository = $repository;
-    }
-
+    /**
+     * The main entry point method.
+     *
+     * @throws BuildException If message is not set
+     * @throws BuildException If error occurs during commit
+     * @return void
+     */
     public function main()
     {
 
         $message = $this->getMessage();
-        if ($message == '') {
+        if ($message === '') {
             throw new BuildException('"message" is a required parameter');
         }
 
         $user = $this->getUser();
 
         $clone = Factory::getInstance('commit');
-        $msg = sprintf("Commit: '$message'");
+        $msg = sprintf("Commit: '%s'", $message);
         $this->log($msg, Project::MSG_INFO);
-        //$clone->setInsecure($this->getInsecure());
         $clone->setQuiet($this->getQuiet());
         $clone->setMessage($message);
 
@@ -70,22 +89,21 @@ class HgCommitTask extends HgBaseTask
             $this->log("Commit: user = '$user'", Project::MSG_VERBOSE);
         }
 
-        if ($this->repository == '') {
+        if ($this->repository === '') {
             $prog = $this->getProject();
             $dir = $prog->getProperty('application.startdir');
         } else {
             $dir = $this->repository;
         }
-        $this->log("DIR:" . $dir, Project::MSG_INFO);
-        $this->log("REPO: " . $this->repository, Project::MSG_INFO);
+        $this->log('DIR:' . $dir, Project::MSG_INFO);
+        $this->log('REPO: ' . $this->repository, Project::MSG_INFO);
         $cwd = getcwd();
-        return;
         chdir($dir);
 
         try {
-            $this->log("Committing...", Project::MSG_INFO);
+            $this->log('Committing...', Project::MSG_INFO);
             $output = $clone->execute();
-            if ($output != '') {
+            if ($output !== '') {
                 $this->log($output);
             }
         } catch(Exception $ex) {
@@ -95,8 +113,10 @@ class HgCommitTask extends HgBaseTask
             if ($p !== false) {
                 $msg = substr($msg, $p + 13);
             }
+            chdir($cwd);
             throw new BuildException($msg);
         }
+        chdir($cwd);
     }
 }
 

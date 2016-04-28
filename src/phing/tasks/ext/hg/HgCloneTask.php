@@ -1,14 +1,49 @@
 <?php
+/**
+ * Utilise Mercurial from within Phing.
+ *
+ * PHP Version 5.4
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     https://github.com/kenguest/Phing-HG
+ */
+
+/**
+ * Pull in Base class.
+ */
 require_once 'HgBaseTask.php';
+
+/**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
 use Siad007\VersionControl\HG\Factory;
 
+/**
+ * Integration/Wrapper for hg clone
+ *
+ * @category Tasks
+ * @package  phing.tasks.ext.hg
+ * @author   Ken Guest <ken@linux.ie>
+ * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
+ * @link     HgCloneTask.php
+ */
 class HgCloneTask extends HgBaseTask
 {
     /**
      * Path to target directory
      * @var string
      */
-    private $targetPath;
+    protected $targetPath;
+
+    /**
+     * Insecure argument
+     *
+     * @var string
+     */
+    protected $insecure = '';
 
     /**
      * Set path to source repo
@@ -21,30 +56,53 @@ class HgCloneTask extends HgBaseTask
         $this->targetPath = $targetPath;
     }
 
+    /**
+     * Get path to the target directory/repo.
+     *
+     * @return string
+     */
     public function getTargetPath()
     {
         return $this->targetPath;
     }
 
+    /**
+     * Set insecure attribute
+     *
+     * @param string $insecure 'yes', etc.
+     *
+     * @return void
+     */
     public function setInsecure($insecure)
     {
         $this->insecure = $insecure;
     }
 
+    /**
+     * Get 'insecure' attribute value. (--insecure or null)
+     *
+     * @return void
+     */
     public function getInsecure()
     {
         return $this->insecure;
     }
 
+    /**
+     * The main entry point.
+     *
+     * @return void
+     * @throws BuildException
+     */
     public function main()
     {
         $clone = Factory::getInstance('clone');
         $repository = $this->getRepository();
-        if ($repository == '') {
+        if ($repository === '') {
             throw new BuildException('"repository" is a required parameter');
         }
         $target = $this->getTargetPath();
-        if ($target == '') {
+        if ($target === '') {
             throw new BuildException('"targetPath" is a required parameter');
         }
         // Is target path empty?
@@ -54,7 +112,7 @@ class HgCloneTask extends HgBaseTask
                 throw new BuildException("Directory \"$target\" is not empty");
             }
         }
-        $msg = sprintf("hg cloning %s to %s", $repository, $target);
+        $msg = sprintf('hg cloning %s to %s', $repository, $target);
         $this->log($msg, Project::MSG_INFO);
         $clone->setSource($repository);
         $clone->setDestination($target);
@@ -62,7 +120,7 @@ class HgCloneTask extends HgBaseTask
         $clone->setQuiet($this->getQuiet());
         try {
             $output = $clone->execute();
-            if ($output != '') {
+            if ($output !== '') {
                 $this->log($output);
             }
         } catch(Exception $ex) {
