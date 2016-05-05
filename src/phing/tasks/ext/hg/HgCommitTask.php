@@ -90,8 +90,8 @@ class HgCommitTask extends HgBaseTask
         }
 
         if ($this->repository === '') {
-            $prog = $this->getProject();
-            $dir = $prog->getProperty('application.startdir');
+            $project = $this->getProject();
+            $dir = $project->getProperty('application.startdir');
         } else {
             $dir = $this->repository;
         }
@@ -101,7 +101,7 @@ class HgCommitTask extends HgBaseTask
         chdir($dir);
 
         try {
-            $this->log('Committing...', Project::MSG_INFO);
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
             $output = $clone->execute();
             if ($output !== '') {
                 $this->log($output);

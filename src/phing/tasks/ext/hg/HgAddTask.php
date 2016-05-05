@@ -41,7 +41,7 @@ class HgAddTask extends HgBaseTask
     /**
      * Array of files to ignore
      *
-     * @var mixed
+     * @var string[]
      */
     protected $ignoreFile = [];
 
@@ -206,4 +206,3 @@ class HgAddTask extends HgBaseTask
         return true;
     }
 }
-

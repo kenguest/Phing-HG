@@ -29,9 +29,9 @@ abstract class HgBaseTask extends Task
     /**
      * Whether to be quiet... --quiet argument.
      *
-     * @var string
+     * @var bool
      */
-    protected $quiet = '';
+    protected $quiet = false;
 
     /**
      * Set repository attribute
@@ -49,19 +49,19 @@ abstract class HgBaseTask extends Task
     /**
      * Set the quiet attribute --quiet
      *
-     * @param string $quiet
+     * @param string $quiet yes|no|true|false|1|0
      *
      * @return void
      */
     public function setQuiet($quiet)
     {
-        $this->quiet = $quiet;
+        $this->quiet = StringHelper::booleanValue($quiet);
     }
 
     /**
      * Get the quiet attribute value.
      *
-     * @return string
+     * @return bool
      */
     public function getQuiet()
     {
@@ -87,7 +87,7 @@ abstract class HgBaseTask extends Task
      */
     public function setInsecure($insecure)
     {
-        $this->insecure = $insecure;
+        $this->insecure = StringHelper::booleanValue($insecure);
     }
 
     /**
@@ -121,5 +121,4 @@ abstract class HgBaseTask extends Task
     {
         return $this->user;
     }
-
 }

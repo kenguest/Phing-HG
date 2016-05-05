@@ -48,11 +48,7 @@ class HgPushTask extends HgBaseTask
      */
     public function setHaltonerror($halt)
     {
-        $doHalt = false;
-        if ((int) $halt === 1 || strtolower($halt) === 'yes') {
-            $doHalt = true;
-        }
-        $this->haltonerror = $doHalt;
+        $this->haltonerror = StringHelper::booleanValue($halt);
     }
 
     /**
@@ -72,6 +68,7 @@ class HgPushTask extends HgBaseTask
         $cwd = getcwd();
         chdir($dir);
         try {
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
             $output = $clone->execute();
             if ($output !== '') {
                 $this->log($output);

@@ -17,6 +17,11 @@
 require_once 'HgBaseTask.php';
 
 /**
+ * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
+ */
+use Siad007\VersionControl\HG\Factory;
+
+/**
  * Integration/Wrapper for hg archive
  *
  * @category Tasks
@@ -72,8 +77,28 @@ class HgArchiveTask extends HgBaseTask
      */
     public function main()
     {
+        $clone = Factory::getInstance('archive');
         if ($this->revision !== '') {
             $clone->setRev($this->revision);
+        }
+
+        if ($this->destination === null) {
+            throw new BuildException("Destination must be set.");
+        }
+
+        try {
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
+            $output = $clone->execute();
+            if ($output !== '') {
+                $this->log(PHP_EOL . $output);
+            }
+        } catch(Exception $ex) {
+            $msg = $ex->getMessage();
+            $p = strpos($msg, 'hg returned:');
+            if ($p !== false) {
+                $msg = substr($msg, $p + 13);
+            }
+            throw new BuildException($msg);
         }
     }
 }

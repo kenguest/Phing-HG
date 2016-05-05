@@ -34,6 +34,7 @@ class HgCloneTask extends HgBaseTask
 {
     /**
      * Path to target directory
+     *
      * @var string
      */
     protected $targetPath;
@@ -41,14 +42,15 @@ class HgCloneTask extends HgBaseTask
     /**
      * Insecure argument
      *
-     * @var string
+     * @var bool
      */
-    protected $insecure = '';
+    protected $insecure = false;
 
     /**
      * Set path to source repo
      *
-     * @param  string $targetPath Path to repository used as source
+     * @param string $targetPath Path to repository used as source
+     *
      * @return void
      */
     public function setTargetPath($targetPath)
@@ -75,13 +77,13 @@ class HgCloneTask extends HgBaseTask
      */
     public function setInsecure($insecure)
     {
-        $this->insecure = $insecure;
+        $this->insecure = StringHelper::booleanValue($insecure);
     }
 
     /**
-     * Get 'insecure' attribute value. (--insecure or null)
+     * Get 'insecure' attribute value.
      *
-     * @return void
+     * @return bool
      */
     public function getInsecure()
     {
@@ -119,6 +121,7 @@ class HgCloneTask extends HgBaseTask
         $clone->setInsecure($this->getInsecure());
         $clone->setQuiet($this->getQuiet());
         try {
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
             $output = $clone->execute();
             if ($output !== '') {
                 $this->log($output);

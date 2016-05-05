@@ -74,6 +74,7 @@ class HgPullTask extends HgBaseTask
         chdir($dir);
 
         try {
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
             $output = $clone->execute();
             if ($output !== '') {
                 $this->log($output);

@@ -33,11 +33,37 @@ use Siad007\VersionControl\HG\Factory;
 class HgRevertTask extends HgBaseTask
 {
     /**
+     * All
+     *
+     * @var bool
+     */
+    protected $all = false;
+
+    /**
      * Name of file to be reverted.
      *
      * @var string
      */
     protected $file = null;
+
+    /**
+     * Revision
+     *
+     * @var string
+     */
+    protected $revision = '';
+
+    /**
+     * Set whether all files are to be reverted.
+     *
+     * @param string $value Jenkins style boolean value
+     *
+     * @return void
+     */
+    public function setAll($value)
+    {
+        $this->all = StringHelper::booleanValue($value);
+    }
 
     /**
      * Set filename to be reverted.
@@ -51,6 +77,19 @@ class HgRevertTask extends HgBaseTask
         $this->file = $file;
 
     }
+
+    /**
+     * Set revision attribute
+     *
+     * @param string $revision Revision
+     *
+     * @return void
+     */
+    public function setRevision($revision)
+    {
+        $this->revision = $revision;
+    }
+
     /**
      * The main entry point method.
      *
@@ -59,6 +98,29 @@ class HgRevertTask extends HgBaseTask
      */
     public function main()
     {
+        $clone = Factory::getInstance('revert');
+        $clone->setQuiet($this->getQuiet());
+        $clone->setAll($this->all);
+        if ($this->revision !== '') {
+            $clone->setRev($this->revision);
+        }
+        if ($file !== null) {
+            $clone->addName($file);
+        }
 
+        try {
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
+            $output = $clone->execute();
+            if ($output !== '') {
+                $this->log(PHP_EOL . $output);
+            }
+        } catch(Exception $ex) {
+            $msg = $ex->getMessage();
+            $p = strpos($msg, 'hg returned:');
+            if ($p !== false) {
+                $msg = substr($msg, $p + 13);
+            }
+            throw new BuildException($msg);
+        }
     }
 }

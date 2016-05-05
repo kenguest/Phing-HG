@@ -175,6 +175,7 @@ class HgLogTask extends HgBaseTask
         }
 
         try {
+            $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);
             $output = $clone->execute();
             if ($this->outputProperty !== null) {
                 $this->project->setProperty($this->outputProperty, $output);

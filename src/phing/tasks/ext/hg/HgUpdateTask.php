@@ -51,9 +51,9 @@ class HgUpdateTask extends HgBaseTask
     /**
      * Clean argument
      *
-     * @var string
+     * @var bool
      */
-    protected $clean = '';
+    protected $clean = false;
 
     /**
      * Set 'clean' attribute.
@@ -64,13 +64,13 @@ class HgUpdateTask extends HgBaseTask
      */
     public function setClean($value)
     {
-        $this->clean = $value;
+        $this->clean = StringHelper::booleanValue($value);
     }
 
     /**
      * Get 'clean' attribute.
      *
-     * @return string
+     * @return bool
      */
     public function getClean()
     {
@@ -122,6 +122,7 @@ class HgUpdateTask extends HgBaseTask
 
         chdir($dir);
         try {
+            $this->log("Executing: " . $pull->asString(), Project::MSG_INFO);
             $output = $pull->execute();
             if ($output !== '') {
                 $this->log($output);
