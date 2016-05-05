@@ -6,7 +6,7 @@
  *
  * @category Tasks
  * @package  phing.tasks.ext
- * @author   Ken Guest <ken@linux.ie>
+ * @author   Ken Guest <kguest@php.net>
  * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
  * @link     https://github.com/kenguest/Phing-HG
  */
@@ -26,7 +26,7 @@ use Siad007\VersionControl\HG\Factory;
  *
  * @category Tasks
  * @package  phing.tasks.ext.hg
- * @author   Ken Guest <ken@linux.ie>
+ * @author   Ken Guest <kguest@php.net>
  * @license  LGPL (see http://www.gnu.org/licenses/lgpl.html)
  * @link     HgCommitTask.php
  */
