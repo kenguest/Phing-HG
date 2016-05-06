@@ -130,6 +130,9 @@ class HgTagTask extends HgBaseTask
         if ($this->revision !== '') {
             $clone->setRev($this->revision);
         }
+        if ($this->user !== null) {
+            $clone->setUser($this->user);
+        }
         $message = $this->getMessage();
         $clone->setMessage($message);
         $clone->addName($this->getName());
