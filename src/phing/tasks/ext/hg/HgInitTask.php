@@ -61,9 +61,17 @@ class HgInitTask extends HgBaseTask
         $clone = Factory::getInstance('init');
         $this->log('Initializing', Project::MSG_INFO);
         $clone->setQuiet($this->getQuiet());
-        $project = $this->getProject();
-        $dir = $project->getProperty('application.startdir');
+        $clone->setInsecure($this->getInsecure());
         $cwd = getcwd();
+        if ($this->repository === '') {
+            $project = $this->getProject();
+            $dir = $project->getProperty('application.startdir');
+        } else {
+            $dir = $this->repository;
+        }
+        if (!is_dir($dir)) {
+            throw new BuildException("$dir is not a directory.");
+        }
         chdir($dir);
         try {
             $this->log("Executing: " . $clone->asString(), Project::MSG_INFO);

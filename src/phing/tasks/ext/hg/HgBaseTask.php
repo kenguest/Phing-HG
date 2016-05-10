@@ -49,6 +49,13 @@ abstract class HgBaseTask extends Task
     protected $quiet = false;
 
     /**
+     * Username.
+     *
+     * @var string
+     */
+    protected $user = '';
+
+    /**
      * Set repository attribute
      *
      * @param string $repository Repository
@@ -135,5 +142,25 @@ abstract class HgBaseTask extends Task
     public function getUser()
     {
         return $this->user;
+    }
+
+    /**
+     * Check provided repository directory actually is an existing directory.
+     *
+     * @param string $dir Repository directory
+     *
+     * @return bool
+     * @throws BuildException
+     */
+    public function checkRepositoryIsDirAndExists($dir)
+    {
+        if (file_exists($dir)) {
+            if (!is_dir($dir)) {
+                throw new BuildException("Repository '$dir' is not a directory.");
+            }
+        } else {
+            throw new BuildException("Repository directory '$dir' does not exist.");
+        }
+        return true;
     }
 }

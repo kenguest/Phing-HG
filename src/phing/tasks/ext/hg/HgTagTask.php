@@ -53,7 +53,6 @@ class HgTagTask extends HgBaseTask
      */
     protected $revision = '';
 
-
     /**
      * Set the name argument
      *
@@ -120,6 +119,9 @@ class HgTagTask extends HgBaseTask
         $clone = Factory::getInstance('tag');
         $cwd = getcwd();
 
+        if ($this->name === '') {
+            throw new BuildException("Tag name must be set.");
+        }
         if ($this->repository === '') {
             $prog = $this->getProject();
             $dir = $prog->getProperty('application.startdir');
@@ -135,8 +137,13 @@ class HgTagTask extends HgBaseTask
         }
         $message = $this->getMessage();
         $clone->setMessage($message);
-        $clone->addName($this->getName());
+        $name = $this->getName();
+        if ($name == '') {
+            throw new BuildException("Name attribute must be set.");
+        }
+        $clone->addName($name);
 
+        $this->checkRepositoryIsDirAndExists($dir);
         chdir($dir);
 
         try {

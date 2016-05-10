@@ -71,6 +71,7 @@ class HgPullTask extends HgBaseTask
         } else {
             $dir = $this->repository;
         }
+        $this->checkRepositoryIsDirAndExists($dir);
         chdir($dir);
 
         try {

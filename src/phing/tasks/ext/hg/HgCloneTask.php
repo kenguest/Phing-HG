@@ -37,14 +37,7 @@ class HgCloneTask extends HgBaseTask
      *
      * @var string
      */
-    protected $targetPath;
-
-    /**
-     * Insecure argument
-     *
-     * @var bool
-     */
-    protected $insecure = false;
+    protected $targetPath = '';
 
     /**
      * Set path to source repo
@@ -69,28 +62,6 @@ class HgCloneTask extends HgBaseTask
     }
 
     /**
-     * Set insecure attribute
-     *
-     * @param string $insecure 'yes', etc.
-     *
-     * @return void
-     */
-    public function setInsecure($insecure)
-    {
-        $this->insecure = StringHelper::booleanValue($insecure);
-    }
-
-    /**
-     * Get 'insecure' attribute value.
-     *
-     * @return bool
-     */
-    public function getInsecure()
-    {
-        return $this->insecure;
-    }
-
-    /**
      * The main entry point.
      *
      * @return void
@@ -112,6 +83,9 @@ class HgCloneTask extends HgBaseTask
             $files = scandir($target);
             if (is_array($files) && count($files) > 2) {
                 throw new BuildException("Directory \"$target\" is not empty");
+            }
+            if (!is_dir($target)) {
+                throw new BuildException("\"$target\" is not a directory");
             }
         }
         $msg = sprintf('hg cloning %s to %s', $repository, $target);
