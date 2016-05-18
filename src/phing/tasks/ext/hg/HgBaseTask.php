@@ -12,11 +12,6 @@
  */
 
 /**
- * Depending on composer for pulling in siad007's VersionControl_HG package.
- */
-@require_once 'vendor/autoload.php';
-
-/**
  * Base task for integrating phing and mercurial.
  *
  * @category Tasks
@@ -55,6 +50,7 @@ abstract class HgBaseTask extends Task
      */
     protected $user = '';
 
+    static $factory = null;
     /**
      * Set repository attribute
      *
@@ -163,4 +159,32 @@ abstract class HgBaseTask extends Task
         }
         return true;
     }
+
+    /**
+     * Initialise the task.
+     *
+     * @return void
+     */
+    public function init()
+    {
+        if (version_compare(PHP_VERSION, '5.4', "<")) {
+            throw new BuildException('This task requires PHP 5.4+');
+        } else {
+            /**
+            * Depending on composer for pulling in siad007's VersionControl_HG.
+            */
+            @include_once 'vendor/autoload.php';
+        }
+    }
+
+    public function getFactoryInstance($command, $options = array())
+    {
+        $vchq = '\\Siad007\\VersionControl\\HG\\Factory';
+        self::$factory = call_user_func_array(
+            array($vchq, 'getInstance'),
+            array($command, $options)
+        );
+        return self::$factory;
+    }
+
 }

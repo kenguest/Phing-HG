@@ -14,12 +14,7 @@
 /**
  * Pull in Base class.
  */
-require_once 'HgBaseTask.php';
-
-/**
- * Pull in and use https://packagist.org/packages/siad007/versioncontrol_hg
- */
-use Siad007\VersionControl\HG\Factory;
+require_once 'phing/tasks/ext/hg/HgBaseTask.php';
 
 /**
  * Integration/Wrapper for hg init
@@ -58,7 +53,7 @@ class HgInitTask extends HgBaseTask
      */
     public function main()
     {
-        $clone = Factory::getInstance('init');
+        $clone = $this->getFactoryInstance('init');
         $this->log('Initializing', Project::MSG_INFO);
         $clone->setQuiet($this->getQuiet());
         $clone->setInsecure($this->getInsecure());
